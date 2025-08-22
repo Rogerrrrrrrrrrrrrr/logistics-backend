@@ -17,4 +17,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleGeneralError(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong: " + ex.getMessage());
     }
+
+    @ExceptionHandler(DriverNotFoundException.class)
+    public ResponseEntity<String> handleDriverNotFound(DriverNotFoundException message){
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message.getMessage());
+    }
 }
