@@ -72,9 +72,18 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrdersByUserId(userId));
     }
 
-    @GetMapping("/driver/{driverId}")
+    @GetMapping("/orders/driver/{driverId}")
     public ResponseEntity<List<Orders>> getOrdersByDriver(@PathVariable Long driverId) {
         return ResponseEntity.ok(orderService.getOrdersByDriverId(driverId));
     }
+
+    @PatchMapping("/{orderId}/status-flow")
+    public ResponseEntity<Orders> updateOrderStatusFlow(
+            @PathVariable Long orderId,
+            @RequestParam Orders.OrderStatus newStatus) {
+        Orders order = orderService.updateStatus(orderId, newStatus);
+        return ResponseEntity.ok(order);
+    }
+
 }
 

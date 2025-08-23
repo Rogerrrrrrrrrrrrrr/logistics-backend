@@ -1,7 +1,9 @@
 package com.logistics_backend.controller;
 
 import com.logistics_backend.entity.Driver;
+import com.logistics_backend.entity.Orders;
 import com.logistics_backend.service.DriverImpl;
+import com.logistics_backend.service.OrderServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,8 @@ public class DriverController {
 
     @Autowired
     private DriverImpl driverImpl;
+    @Autowired
+    private OrderServiceImpl orderService;
 
     @GetMapping(value = "/api/drivers")
     public ResponseEntity<List<Driver>> getAllDrivers(){
@@ -83,6 +87,12 @@ public class DriverController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+    @PatchMapping("/{orderId}/auto-assign")
+    public ResponseEntity<Orders> autoAssignDriver(@PathVariable Long orderId) {
+        Orders order = orderService.autoAssignDriver(orderId);
+        return ResponseEntity.ok(order);
+    }
+
 
 
 }

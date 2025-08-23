@@ -2,12 +2,14 @@ package com.logistics_backend.service;
 
 import com.logistics_backend.entity.Driver;
 import com.logistics_backend.entity.Orders;
+import com.logistics_backend.entity.TrackingEvent;
 import com.logistics_backend.entity.User;
 import com.logistics_backend.exception.DriverNotFoundException;
 import com.logistics_backend.exception.InvalidOperationException;
 import com.logistics_backend.exception.OrderNotFoundException;
 import com.logistics_backend.repository.DriverRepo;
 import com.logistics_backend.repository.OrderRepo;
+import com.logistics_backend.repository.TrackingEventRepo;
 import com.logistics_backend.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ public class OrderServiceImpl implements OrderService{
     private UserRepo userRepo;
     @Autowired
     private DriverRepo driverRepo;
+    @Autowired
+    TrackingEventRepo trackingEventRepo;
 
     @Override
     public Orders createOrder(Orders orders, Long userId) {
@@ -81,14 +85,45 @@ public class OrderServiceImpl implements OrderService{
 
         return orderRepo.save(order);
     }
+    private boolean isValidTransition(Orders.OrderStatus current, Orders.OrderStatus next) {
+        if (current == Orders.OrderStatus.CREATED) {
+            return next == Orders.OrderStatus.ASSIGNED || next == Orders.OrderStatus.CANCELLED;
+        } else if (current == Orders.OrderStatus.ASSIGNED) {
+            return next == Orders.OrderStatus.ACCEPTED || next == Orders.OrderStatus.CANCELLED;
+        } else if (current == Orders.OrderStatus.ACCEPTED) {
+            return next == Orders.OrderStatus.PICKED_UP;
+        } else if (current == Orders.OrderStatus.PICKED_UP) {
+            return next == Orders.OrderStatus.IN_PROGRESS || next == Orders.OrderStatus.RETURNED;
+        } else if (current == Orders.OrderStatus.IN_PROGRESS) {
+            return next == Orders.OrderStatus.DELIVERED || next == Orders.OrderStatus.RETURNED;
+        } else if (current == Orders.OrderStatus.DELIVERED) {
+            return next == Orders.OrderStatus.RETURNED;
+        }
+        return false;
+    }
 
 
     @Override
     public Orders updateStatus(Long orderId, Orders.OrderStatus status) {
         Orders order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        Orders.OrderStatus currentStatus = order.getStatus();
+
+        if (!isValidTransition(currentStatus, status)) {
+            throw new InvalidOperationException("Invalid status transition from " + currentStatus + " to " + status);
+        }
         order.setStatus(status);
-        return orderRepo.save(order);    }
+        order.setUpdatedAt(LocalDateTime.now());
+
+        TrackingEvent event = new TrackingEvent();
+        event.setOrders(order);
+        event.setEvent(TrackingEvent.Events.valueOf(status.name()));
+        event.setEventTime(LocalDateTime.now());
+        trackingEventRepo.save(event);
+
+        return orderRepo.save(order);
+
+        }
 
     @Override
     public Orders updateDeliveryStatus(Long orderId, Orders.DeliveryStatus deliveryStatus) {
@@ -143,5 +178,20 @@ public class OrderServiceImpl implements OrderService{
     @Override
     public void deleteOrder(Long id) {
         orderRepo.deleteById(id);
+    }
+
+    @Override
+    public Orders autoAssignDriver(Long id) {
+        Orders orders = orderRepo.findById(id)
+                .orElseThrow(()-> new OrderNotFoundException("Order doesn't found"));
+        List<Driver> allAvailableDrivers = driverRepo.findByStatus(Driver.DriverStatus.AVAILABLE);
+        if (allAvailableDrivers.isEmpty()){
+            throw  new InvalidOperationException("No available drivers right now");
+        }
+        Driver driver = allAvailableDrivers.get(0);
+        driver.setStatus(Driver.DriverStatus.BUSY);
+        orders.setDriver(driver);
+        driverRepo.save(driver);
+        return orderRepo.save(orders);
     }
 }

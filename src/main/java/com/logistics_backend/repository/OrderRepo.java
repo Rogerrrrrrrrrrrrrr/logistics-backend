@@ -1,5 +1,6 @@
 package com.logistics_backend.repository;
 
+import com.logistics_backend.entity.Driver;
 import com.logistics_backend.entity.Orders;
 import org.springframework.data.jpa.repository.JpaRepository;
 

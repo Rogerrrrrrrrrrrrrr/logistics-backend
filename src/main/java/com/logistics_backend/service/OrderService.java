@@ -17,4 +17,6 @@ public interface OrderService {
     List<Orders> getOrdersByDriverId(Long driverId);
     List<Orders> getAllOrders();
     void deleteOrder(Long id);
+    Orders autoAssignDriver(Long id);
+
 }
