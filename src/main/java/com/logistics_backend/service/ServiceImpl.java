@@ -6,6 +6,7 @@ import com.logistics_backend.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -16,6 +17,7 @@ public class ServiceImpl implements UserService{
 
     @Override
     public User createUser(User user) {
+        user.setCreatedAt(LocalDateTime.now());
         return this.userRepo.save(user);
     }
 
@@ -32,17 +34,18 @@ public class ServiceImpl implements UserService{
 
     @Override
     public User updateUser(User user, Long id) {
-        User user1 = getUserById(id);
-        user1.setName(user1.getName());
-        user1.setEmail(user1.getEmail());
-        user1.setPhoneNumber(user.getPhoneNumber());
-
-        return userRepo.findById(id)
-                .orElseThrow(()-> new UserNotFoundException("User with " + id + " not Found"));
+        User existingUser = getUserById(id);
+        existingUser.setName(user.getName());
+        existingUser.setEmail(user.getEmail());
+        existingUser.setPhoneNumber(user.getPhoneNumber());
+        return userRepo.save(existingUser);
     }
 
     @Override
     public void deleteUser(Long id) {
+        if (!userRepo.existsById(id)) {
+            throw new UserNotFoundException("User with " + id + " not Found");
+        }
         userRepo.deleteById(id);
     }
 }

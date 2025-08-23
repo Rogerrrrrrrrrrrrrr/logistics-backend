@@ -38,15 +38,18 @@ public class DriverImpl implements DriverService{
     public Driver updateDriver(Driver driver, Long id) {
         Driver driver1 = getDriverById(id);
 
-        driver1.setName(driver1.getName());
-        driver1.setPhoneNumber(driver1.getPhoneNumber());
-        driver1.setStatus(driver1.getStatus());
+        driver1.setName(driver.getName());
+        driver1.setPhoneNumber(driver.getPhoneNumber());
+        driver1.setStatus(driver.getStatus());
 
         return driverRepo.save(driver1);
     }
 
     @Override
     public void deleteDriver(Long id) {
+        if (!driverRepo.existsById(id)) {
+            throw new DriverNotFoundException("Driver with id " + id + " not found");
+        }
         driverRepo.deleteById(id);
     }
 

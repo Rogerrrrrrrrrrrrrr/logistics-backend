@@ -22,4 +22,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleDriverNotFound(DriverNotFoundException message){
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message.getMessage());
     }
+
+    @ExceptionHandler(OrderNotFoundException.class)
+    public ResponseEntity<String> handleOrderNotFound(OrderNotFoundException message){
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message.getMessage());
+    }
+    @ExceptionHandler(InvalidOperationException.class)
+    public ResponseEntity<String> handleInvalidOperation(InvalidOperationException message){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message.getMessage());
+    }
 }

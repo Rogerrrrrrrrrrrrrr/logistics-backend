@@ -64,6 +64,7 @@ public class UserController {
     @DeleteMapping("/api/users/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable("id") long id) {
         try {
+            service.deleteUser(id);
             return ResponseEntity.status(HttpStatus.OK).build();
         }catch (Exception e){
             e.printStackTrace();

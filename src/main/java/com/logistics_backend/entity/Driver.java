@@ -23,6 +23,10 @@ public class Driver {
     @Column(nullable = true,updatable = false)
     private LocalDateTime createdAt;
 
+    public boolean isActive() {
+        return false;
+    }
+
     public enum DriverStatus {
         AVAILABLE,BUSY,INACTIVE,ON_TRIP
     }
